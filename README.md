@@ -5,40 +5,98 @@
 
 ### Azure Functions
 
-**Definición clave**: Servicio serverless que ejecuta código en respuesta a eventos sin administrar infraestructura.
+Servicio serverless para ejecutar código (Funciones) en respuesta a eventos **sin administrar infraestructura**. Soporta múltiples lenguajes (C#, Python, JavaScript, etc.).
 
-**Tabla comparativa de triggers**:
+---
 
-| Trigger | Escenario típico | Configuración en C# |
-|---------|------------------|---------------------|
-| HTTP | APIs REST | `[HttpTrigger(AuthorizationLevel.Function, "post")]` |
-| Blob | Procesar archivos al subirse | `[BlobTrigger("container/{name}")]` |
-| Queue | Procesamiento asíncrono | `[QueueTrigger("myqueue")]` |
+#### **Planes de Hospedaje**
 
-**Fragmento de código para HTTP Trigger**:
+| **Plan**          | **Escenario**                          | **Precio**               | **Límites Clave**                          |
+|--------------------|----------------------------------------|--------------------------|--------------------------------------------|
+| **Consumption**    | Cargas esporádicas, costo por ejecución | Pago por GB-segundo      | - 10 min timeout máximo<br>- Cold starts frecuentes<br>- 1.5 GB RAM/función |
+| **Premium**        | Ejecución predecible, VNET             | Pago por núcleo + memoria | - 60 min timeout<br>- Sin cold starts<br>- Escalado instantáneo - Escala hasta 200 instancias|
+| **App Service**    | Control total, dedicado                | Costo fijo por instancia | - Sin límite de tiempo<br>- Compatible con Linux/Windows |
+
+---
+
+#### **Triggers y Bindings (C#)**
+
+| **Trigger** | **Escenario**               | **Ejemplo C#**                                  |
+|-------------|-----------------------------|------------------------------------------------|
+| HTTP        | APIs REST                   | `[HttpTrigger(AuthorizationLevel.Function)]`   |
+| Blob        | Procesar archivos nuevos    | `[BlobTrigger("container/{name}")]`            |
+| Queue       | Mensajes de Storage Queue   | `[QueueTrigger("myqueue")]`                    |
+| Cosmos DB   | Cambios en documentos       | `[CosmosDBTrigger(database, collection)]`      |
+| Event Hubs  | Streaming de eventos        | `[EventHubTrigger("hubname")]`                 |
+
+**Ejemplo HTTP Trigger:**
 ```csharp
 [FunctionName("HttpExample")]
 public static async Task<IActionResult> Run(
     [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequest req,
     ILogger log)
 {
-    // Procesar solicitud
-    return new OkObjectResult("Success");
+    log.LogInformation("Ejecutando...");
+    return new OkObjectResult("Éxito");
 }
 ```
 
-**Errores comunes**:
-- Timeout por cold start (usar plan Premium para evitar)
-- Funciones bloqueantes (siempre usar async/await)
+---
 
-### App Services
+#### **Errores Comunes y Soluciones**
 
-**Definición clave**: Plataforma para hospedar aplicaciones web, APIs y backends móviles con soporte para múltiples lenguajes.
+| **Error**                     | **Causa**                          | **Solución**                                   |
+|-------------------------------|------------------------------------|-----------------------------------------------|
+| Timeouts (>10 min)            | Límite del plan Consumption        | Migrar a Premium o App Service                |
+| Cold starts                   | Inactividad en Consumption         | Usar Premium o ping periódico                 |
+| Funciones bloqueantes         | Código sincrónico                  | Usar siempre `async/await`                    |
+| Problemas de escalado         | Límite de instancias (200 en Premium) | Optimizar código o usar Durable Functions |
 
-**Límites críticos**:
-- 30 instancias máximas en escalado horizontal (Standard plan)
-- 1.75 GB de memoria por instancia (Free tier)
+---
 
+#### **Durable Functions (Orquestación)**
+**Patrones comunes:**
+1. **Function Chaining**: 
+   ```csharp
+   await context.CallActivityAsync("Function1", input);
+   await context.CallActivityAsync("Function2", input);
+   ```
+2. **Fan-out/Fan-in**:
+   ```csharp
+   var tasks = new List<Task>();
+   foreach (var item in items)
+       tasks.Add(context.CallActivityAsync("ProcessItem", item));
+   await Task.WhenAll(tasks);
+   ```
+
+**Límites:**
+- Máximo **7 días** para orquestaciones
+- Hasta **5 MB** por mensaje de orquestación
+
+---
+
+#### **Mejores Prácticas**
+1. **Stateless**: Evitar almacenar estado localmente
+2. **Tamaño pequeño**: Ideal <1 MB de memoria
+3. **Logging centralizado**: Usar Application Insights
+4. **Retry policies**: Para errores transitorios
+5. **Managed Identity**: Para acceder a Key Vault/Storage
+
+**Ejemplo de retry:**
+```json
+// host.json
+{
+  "extensions": {
+    "http": {
+      "routePrefix": "api",
+      "maxOutstandingRequests": 200,
+      "maxConcurrentRequests": 100
+    }
+  }
+}
+```
+
+---
 
 ### **Contenedores Administrados en Azure**  
 
@@ -251,7 +309,7 @@ az vmss create \
 
 ### **🔹 Azure Batch**  
 **Definición clave**: Servicio para ejecutar trabajos paralelos a gran escala.  
-
+low-priority VMs para reducción de cost
 **Ejemplo (CLI)**:  
 ```bash
 az batch account create \
@@ -354,7 +412,8 @@ Trigger (HTTP Request) → Action (Send Email) → Condition (If status = 200) �
 3. **ACI**: 
    - Máximo 4 vCPU y 16 GB RAM por contenedor.
 4. **Container Apps**: 
-   - Hasta 100 réplicas por aplicación (límite aumentable).
+   - 100 réplicas por defecto .
+   - Novedad: Ahora tiene soporte para redes IPv6 (antes no)
 
 Esta tabla te ayudará a tomar decisiones basadas en escalabilidad, costos y requisitos técnicos. ¿Necesitas profundizar en algún servicio en particular?
 
@@ -426,7 +485,8 @@ await queueClient.DeleteMessageAsync(message.MessageId, message.PopReceipt);
 |---------------|----------------|
 | **Visibility timeout** | Tiempo que el mensaje queda oculto tras ser leído (default: 30s) |
 | **Message TTL** | Tiempo antes de la eliminación automática |
-| **Dead-letter queue** | Para mensajes fallidos después de max delivery count |
+| **Dead-letter queue** | - Usar `dequeueCount` para reintentos (ej: if dequeueCount > 3 → mover a cola manual)
+- No hay DLQ nativo (para DLQ usar Service Bus) |
 
 #### **🔹 Casos de Uso Típicos**
 - Desacoplamiento entre componentes
@@ -728,7 +788,7 @@ az role assignment create \
 ---
 
 ### **3. Azure Policy & Blueprints**
-
+Azure Blueprints está en proceso de ser reemplazado por Azure Deployment Environments
 ### **🔹 Azure Policy**
 **Definición de política (ejemplo: exigir TLS 1.2 en Storage):**
 ```json
