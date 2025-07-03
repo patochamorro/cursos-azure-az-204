@@ -432,11 +432,51 @@ Esta tabla te ayudará a tomar decisiones basadas en escalabilidad, costos y req
 | Consistencia | 5 niveles ajustables | Strong |
 
 **Niveles de consistencia en Cosmos DB**:
-1. **Strong**: Lecturas garantizan la última versión
-2. **Bounded staleness**: Lecturas retrasadas por un tiempo/configurable
-3. **Session**: Consistencia dentro de una sesión de cliente
-4. **Consistent prefix**: Sin mezcla de órdenes
-5. **Eventual**: Último valor eventualmente
+
+| **Nivel de Consistencia**       | **Garantías**                                                                 | **Rendimiento**       | **Caso de Uso Típico**                                                                 | **Configuración en SDK**                          |
+|----------------------------------|------------------------------------------------------------------------------|-----------------------|---------------------------------------------------------------------------------------|--------------------------------------------------|
+| **Strong** (Fuerte)             | - Lecturas siempre devuelven la última versión escrita.<br>- Sin retrasos de replicación. | Más bajo              | - Sistemas financieros (ej. saldos bancarios).<br>- Procesos donde la precisión es crítica. | `ConsistencyLevel.Strong`                        |
+| **Bounded Staleness** (Obsolescencia Limitada) | - Lecturas pueden retrasarse un tiempo/período configurable (ej. 5 segundos o 100 operaciones).<br>- Orden de escrituras preservado. | Medio-Alto            | - Aplicaciones con SLA estricto pero tolerancia mínima a retrasos.<br>- Catálogos de productos. | `ConsistencyLevel.BoundedStaleness`              |
+| **Session** (Sesión)            | - Consistencia dentro de una sesión de cliente (lecturas propias escrituras).<br>- Mejor equilibrio rendimiento-consistencia. | Alto                  | - Aplicaciones web/móviles.<br>- Carritos de compra.<br>- Perfiles de usuario.          | `ConsistencyLevel.Session` (**Predeterminado**)  |
+| **Consistent Prefix** (Prefijo Consistente) | - Las lecturas ven las escrituras en orden, pero pueden no ser las más recientes.<br>- Sin "mezcla" de eventos. | Muy Alto              | - Chats/mensajería.<br>- Sistemas de comentarios.<br>- Historial de cambios.             | `ConsistencyLevel.ConsistentPrefix`              |
+| **Eventual** (Eventual)         | - Lecturas pueden devolver versiones antiguas temporalmente.<br>- Última versión se propaga "eventualmente". | Máximo                | - Analytics/reportes.<br>- Recomendaciones.<br>- Contadores no críticos (ej. "me gusta"). | `ConsistencyLevel.Eventual`                      |
+
+---
+
+### **Claves para el Examen AZ-204**  
+1. **¿Cuándo usar cada nivel?**  
+   - **Strong**: Cuando la precisión es obligatoria (ej. transferencias bancarias).  
+   - **Session**: Para la mayoría de aplicaciones web (balance ideal).  
+   - **Eventual**: Solo para datos no críticos donde el rendimiento es prioritario.  
+
+2. **Impacto en RU/s** (Unidades de Solicitud):  
+   ```markdown
+   Strong > Bounded Staleness > Session > Consistent Prefix > Eventual  
+   (Mayor costo RU/s → Menor costo RU/s)
+   ```
+
+3. **Ejemplo de configuración global (Azure Portal):**  
+   ```bash
+   az cosmosdb update \
+     --name <account-name> \
+     --resource-group <rg> \
+     --default-consistency-level Session
+   ```
+
+4. **Compatibilidad con multi-región:**  
+   - Todos los niveles son compatibles, pero **Strong** reduce la disponibilidad en fallos regionales.  
+
+---
+
+### **Diagrama de Consistencia vs Latencia**  
+```mermaid
+graph LR
+    A[Strong] -->|Máxima consistencia\nMínima latencia| B[Bounded Staleness]
+    B --> C[Session]
+    C --> D[Consistent Prefix]
+    D -->|Mínima consistencia\nMáxima latencia| E[Eventual]
+```
+
 
 ### Blob Storage
 
