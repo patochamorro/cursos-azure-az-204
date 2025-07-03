@@ -647,46 +647,105 @@ az storage account management-policy create \
 
 ### **5. Change Feed de Cosmos DB**
 
-#### **🔹 Implementación con Functions**
+1. **Contenedor Monitoreado**  
+   - El contenedor que deseas trackear (inserts/updates).  
+   - *No requiere configuración especial*.
+
+2. **Contenedor de Leases (CRÍTICO)**  
+   - Almacena el estado de procesamiento ("qué cambios ya se procesaron").  
+   - **Debes crearlo manualmente** (mismo DB, otro contenedor).  
+   - Configuración mínima:  
+     ```bash
+     az cosmosdb sql container create \
+       --account-name <cuenta> \
+       --database-name <db> \
+       --name leases \
+       --resource-group <rg> \
+       --partition-key-path "/id" \
+       --throughput 400  # Mínimo recomendado
+     ```
+
+3. **Procesador (Ejemplos)**  
+
+**Opción 1: Azure Functions (Mínima Configuración)**
 ```csharp
-[FunctionName("CosmosChangeFeed")]
+[FunctionName("ProcessChanges")]
 public static void Run(
     [CosmosDBTrigger(
-        databaseName: "mydatabase",
-        collectionName: "mycontainer",
+        databaseName: "mydb",
+        collectionName: "orders",  // Contenedor monitoreado
         ConnectionStringSetting = "CosmosDBConnection",
-        LeaseCollectionName = "leases")]
+        LeaseCollectionName = "leases",  // Contenedor de leases
+        CreateLeaseCollectionIfNotExists = true)]  // ✅ Auto-creación si no existe
     IReadOnlyList<Document> changes,
     ILogger log)
 {
-    foreach (var doc in changes)
-    {
-        log.LogInformation($"Document ID: {doc.Id}");
-    }
+    // Lógica de procesamiento aquí
 }
 ```
 
-#### **🔹 Change Feed Processor**
+**Opción 2: SDK (Control Detallado)**
 ```csharp
-var builder = new ChangeFeedProcessorBuilder()
-    .WithProcessorName("myProcessor")
-    .WithLeaseContainer(leaseContainer)
-    .WithFeedContainer(feedContainer)
-    .WithHandler(async (changes, cancellationToken) => {
-        foreach (var doc in changes)
+var leaseContainer = cosmosClient.GetContainer("mydb", "leases");
+var monitoredContainer = cosmosClient.GetContainer("mydb", "orders");
+
+var processor = monitoredContainer
+    .GetChangeFeedProcessorBuilder<Document>(
+        processorName: "myProcessor",
+        onChanges: (changes, cancellationToken) => 
         {
-            Console.WriteLine($"Change for document ID: {doc.Id}");
-        }
-    })
+            foreach (var doc in changes)
+                Console.WriteLine($"Change: {doc.Id}");
+            return Task.CompletedTask;
+        })
+    .WithInstanceName("myApp")
+    .WithLeaseContainer(leaseContainer)
     .Build();
 
-await builder.StartAsync();
+await processor.StartAsync();
 ```
 
-**Patrones comunes:**
-- Replicación entre contenedores
-- Procesamiento en tiempo real
-- Notificaciones de eventos
+---
+
+**Flujo de Trabajo Simplificado**
+```mermaid
+graph TD
+    A[Contenedor 'orders'] -->|Change Feed| B[Procesador]
+    B --> C[Contenedor 'leases' (checkpoints)]
+    B --> D[Lógica de Negocio]
+```
+
+---
+
+**Puntos Clave para el Examen AZ-204**
+1. **Colección de Leases**:
+   - *Requisito obligatorio* (sin esto no funciona).
+   - Debe tener **≥400 RU/s**.
+   - Partition Key: `/id` (recomendado).
+
+2. **Tipos de Trigger**:
+   - **Azure Functions**: Más simple (managed).
+   - **SDK**: Más control (para escenarios avanzados).
+
+3. **Errores Comunes**:
+   - ❌ "Lease collection does not exist" → Solución: Crear contenedor `leases`.
+   - ❌ Procesamiento lento → Aumentar RU/s en `leases`.
+
+4. **Patrones Comunes**:
+   - Sincronización con otros almacenes (ej: SQL DB, Blob Storage).
+   - Notificaciones en tiempo real (ej: enviar emails al cambiar estado).
+
+---
+
+**Ejemplo CLI para Diagnóstico**
+```bash
+# Verificar throughput del contenedor de leases
+az cosmosdb sql container throughput show \
+    --account-name myaccount \
+    --database-name mydb \
+    --name leases \
+    --resource-group myrg
+```
 
 ---
 
