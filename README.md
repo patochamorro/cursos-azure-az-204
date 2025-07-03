@@ -710,8 +710,8 @@ await processor.StartAsync();
 **Flujo de Trabajo Simplificado**
 ```mermaid
 graph TD
-    A[Contenedor 'orders'] -->|Change Feed| B[Procesador]
-    B --> C[Contenedor 'leases' (checkpoints)]
+    A[Contenedor 'orders'] -->|Change Feed| B(Procesador)
+    B --> C[Contenedor 'leases']
     B --> D[Lógica de Negocio]
 ```
 
