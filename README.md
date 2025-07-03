@@ -38,23 +38,10 @@ public static async Task<IActionResult> Run(
 - 30 instancias máximas en escalado horizontal (Standard plan)
 - 1.75 GB de memoria por instancia (Free tier)
 
-### Containers vs VMs
 
-**Tabla comparativa**:
+### **Contenedores Administrados en Azure**  
 
-| Característica | Containers | Máquinas Virtuales |
-|---------------|------------|--------------------|
-| Arranque | Segundos | Minutos |
-| Densidad | Alta (múltiples contenedores por host) | Baja |
-| Aislamiento | Nivel proceso | Nivel hardware |
-| Portabilidad | Alta (misma imagen en cualquier lugar) | Baja |
-
-# Complemento para "Develop Azure Compute Solutions" (AZ-204)
-
-
-## **1. Contenedores Administrados en Azure**  
-
-### **🔹 Azure Container Instances (ACI)**  
+#### **🔹 Azure Container Instances (ACI)**  
 **Definición clave**: Servicio serverless para ejecutar contenedores sin administrar infraestructura.  
 
 **Características principales**:  
@@ -78,7 +65,7 @@ az container create \
 
 ---
 
-### **🔹 Azure Container Apps**  
+#### **🔹 Azure Container Apps**  
 **Definición clave**: Plataforma serverless para microservicios y aplicaciones en contenedores con autoescalado basado en eventos (KEDA).  
 
 **Características clave**:  
@@ -109,7 +96,7 @@ az containerapp create \
 
 ---
 
-### **🔹 Azure Container Registry (ACR)**  
+#### **🔹 Azure Container Registry (ACR)**  
 **Definición clave**: Repositorio privado para imágenes de contenedores con integración CI/CD.  
 
 **Características clave**:  
@@ -133,7 +120,7 @@ az acr build \
 
 ---
 
-## **2. App Service Avanzado**  
+### **2. App Service Avanzado**  
 
 ### **🔹 Deployment Slots**  
 **Definición clave**: Entornos de staging para pruebas antes de producción.  
@@ -224,7 +211,7 @@ az webapp config ssl create \
 
 ---
 
-## **3. Máquinas Virtuales (VMs) y Escalado**  
+### **3. Máquinas Virtuales (VMs) y Escalado**  
 
 ### **🔹 Creación de VM (CLI)**  
 ```bash
@@ -284,8 +271,6 @@ az batch pool create \
 
 ---
 
-## **4. Durable Functions y Logic Apps**  
-
 ### **🔹 Durable Functions (Orquestación Stateful)**  
 **Patrones comunes**:  
 1. **Function Chaining**: Ejecutar funciones en secuencia.  
@@ -304,8 +289,6 @@ public static async Task<List<string>> RunOrchestrator(
 }
 ```
 
----
-
 ### **🔹 Logic Apps (Integración sin código)**  
 **Definición clave**: Automatización de flujos de trabajo entre servicios.  
 
@@ -320,15 +303,59 @@ Trigger (HTTP Request) → Action (Send Email) → Condition (If status = 200) �
 ```
 
 ---
+### **4. Resumen**
 
-## **📌 Resumen Final**  
-| **Tema** | **Puntos clave** |  
-|----------|----------------|  
-| **Contenedores** | ACI (serverless), Container Apps (KEDA), ACR (vulnerabilidades) |  
-| **App Service** | Slots, Autoescalado, Logging, TLS |  
-| **VMs** | VMSS (autoescalado), Availability Sets (HA) |  
-| **Batch/Durable** | Procesamiento paralelo, orquestación stateful |  
+#### **1. Servicios de Cómputo Serverless/Event-Driven**
+| **Servicio**          | **Cuándo Usar**                                                                 | **Planes/Precios**                                                                 | **Limitaciones**                                                                 | **Puntos Clave**                                                                 |
+|-----------------------|---------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|---------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
+| **Azure Functions**   | Ejecución de código sin servidor (eventos HTTP, colas, bases de datos)          | - Consumption (pago por uso) <br> - Premium (VNET, ejecución predecible) <br> - App Service (dedicado) | - Tiempo límite: 10 min (Consumption) <br> - Cold starts en plan Consumption       | - Soporta múltiples lenguajes (C#, Python, etc.) <br> - Bindings para integración fácil |
+| **Durable Functions** | Orquestación de flujos de trabajo stateful (ej. procesamiento en cadena)        | Mismo que Azure Functions                                                         | - Máximo 7 días para orquestaciones <br> - Complejidad en patrones avanzados       | - Patrones como Fan-out/Fan-in <br> - Integración con Event Grid/Service Bus      |
+| **Logic Apps**        | Automatización de flujos entre servicios (SaaS, Azure, on-prem) sin código      | - Consumption (pago por ejecución) <br> - Standard (dedicado)                     | - Límite de 100K ejecuciones/mes (gratis) <br> - Latencia en conectores SaaS       | - +400 conectores integrados <br> - Diseñador visual en Azure Portal             |
 
+---
+
+#### **2. Procesamiento por Lotes y Máquinas Virtuales**
+| **Servicio**               | **Cuándo Usar**                                                                 | **Planes/Precios**                                                                 | **Limitaciones**                                                                 | **Puntos Clave**                                                                 |
+|----------------------------|---------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|---------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
+| **Azure Batch**            | Procesamiento paralelo masivo (ej. renderizado, simulaciones)                   | - Pago por nodos de computación + almacenamiento                                  | - Configuración compleja para pools dinámicos                                    | - Integración con Storage Blob <br> - Escalado automático de nodos               |
+| **Virtual Machines (VMs)** | Cargas de trabajo tradicionales con control total (SO, middleware)              | - Pay-as-you-go <br> - Reserved Instances (ahorro)                                | - Costo elevado vs PaaS <br> - Mantenimiento de infraestructura                  | - Soporta cualquier SO <br> - Ideal para lift-and-shift                          |
+| **VM Scale Sets**          | Escalado automático de aplicaciones stateless (ej. frontends, microservicios)   | Mismo que VMs                                                                     | - No recomendado para stateful apps                                              | - Integración con Load Balancer <br> - Actualizaciones sin downtime              |
+
+---
+
+#### **3. Servicios de Contenedores**
+| **Servicio**               | **Cuándo Usar**                                                                 | **Planes/Precios**                                                                 | **Limitaciones**                                                                 | **Puntos Clave**                                                                 |
+|----------------------------|---------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|---------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
+| **Azure Container Registry (ACR)** | Almacenamiento y gestión de imágenes de contenedores (Docker)              | - Básico/Estándar/Premium (rendimiento y replicación geográfica)                  | - Límite de almacenamiento: 100 TB (Premium)                                     | - Escaneo de vulnerabilidades <br> - Integración con ACI/AKS                    |
+| **Azure Container Instances (ACI)** | Ejecución rápida de contenedores sin administración (tareas efímeras)      | - Pago por segundos de ejecución + recursos (vCPU/memoria)                       | - Sin escalado automático <br> - Máximo 20 GB de almacenamiento efímero          | - Inicio en segundos <br> - Ideal para jobs o tareas programadas                |
+| **Azure Container Apps**   | Microservicios con escalado automático basado en eventos (KEDA)                | - Pago por uso (vCPU/memoria) <br> - Plan gratuito disponible                     | - Sin soporte para redes IPv6 <br> - Limitado a contenedores Linux               | - Integración con Dapr <br> - Escalado a cero (serverless)                      |
+
+---
+
+#### **Comparación Rápida: ¿Cuál Elegir?**
+| **Requisito**                           | **Servicio Recomendado**          | **Razón**                                                                         |
+|-----------------------------------------|-----------------------------------|-----------------------------------------------------------------------------------|
+| **Ejecución rápida sin servidor**       | Azure Functions/ACI               | Menor overhead y costo para cargas esporádicas                                    |
+| **Orquestación compleja**               | Durable Functions                 | Soporte para patrones stateful (ej. Saga)                                         |
+| **Integración entre SaaS**              | Logic Apps                        | Conectores preconstruidos y diseño visual                                         |
+| **Procesamiento masivo paralelo**       | Azure Batch                       | Optimizado para trabajos HPC (High Performance Computing)                         |
+| **Contenedores con escalado automático**| Azure Container Apps              | Escalado basado en HTTP/colas (KEDA) y soporte para Dapr                          |
+| **Control total del SO**                | Virtual Machines                  | Personalización completa del entorno                                              |
+
+---
+
+#### **Límites Clave a Recordar**
+1. **Functions**: 
+   - 1.5 GB de memoria máximo por instancia (Consumption Plan).
+   - Máximo 200 instancias en escalado horizontal (Premium Plan).
+2. **Logic Apps**: 
+   - Tiempo límite de 90 días para ejecuciones asíncronas.
+3. **ACI**: 
+   - Máximo 4 vCPU y 16 GB RAM por contenedor.
+4. **Container Apps**: 
+   - Hasta 100 réplicas por aplicación (límite aumentable).
+
+Esta tabla te ayudará a tomar decisiones basadas en escalabilidad, costos y requisitos técnicos. ¿Necesitas profundizar en algún servicio en particular?
 
 ## 2. Develop for Azure storage (15–20%)
 
@@ -368,16 +395,14 @@ using FileStream uploadFileStream = File.OpenRead("file.txt");
 await blobClient.UploadAsync(uploadFileStream);
 ```
 
-# Complemento para "Develop for Azure Storage" (AZ-204)
+### ** Azure Queue Storage**
 
-## **1. Azure Queue Storage**
-
-### **🔹 Conceptos Clave**
+#### **🔹 Conceptos Clave**
 - Servicio de mensajería simple para patrones producer-consumer
 - Mensajes hasta **64 KB** (256 KB con mensajes grandes habilitados)
 - **TTL (Time to Live)**: Configurable (default: 7 días, máximo: 7 días)
 
-### **🔹 Operaciones Principales**
+#### **🔹 Operaciones Principales**
 ```csharp
 // Configurar cliente
 QueueClient queueClient = new QueueClient(connectionString, "myqueue");
@@ -395,23 +420,23 @@ QueueMessage[] messages = await queueClient.ReceiveMessagesAsync(maxMessages: 5)
 await queueClient.DeleteMessageAsync(message.MessageId, message.PopReceipt);
 ```
 
-### **🔹 Configuraciones Importantes**
+#### **🔹 Configuraciones Importantes**
 | **Parámetro** | **Descripción** | 
 |---------------|----------------|
 | **Visibility timeout** | Tiempo que el mensaje queda oculto tras ser leído (default: 30s) |
 | **Message TTL** | Tiempo antes de la eliminación automática |
 | **Dead-letter queue** | Para mensajes fallidos después de max delivery count |
 
-### **🔹 Casos de Uso Típicos**
+#### **🔹 Casos de Uso Típicos**
 - Desacoplamiento entre componentes
 - Buffer para procesamiento asíncrono
 - Distribución de trabajo entre múltiples workers
 
 ---
 
-## **2. Azure Files & File Sync**
+### **2. Azure Files & File Sync**
 
-### **🔹 Azure Files**
+#### **🔹 Azure Files**
 - Comparticiones SMB/NFS totalmente administradas
 - **Protocolos soportados**: SMB 3.0 (con encriptación), NFS 4.1 (Premium tier)
 - **Tipos de niveles**:
@@ -425,7 +450,7 @@ sudo mount -t cifs \
 -o vers=3.0,username=mystorage,password=****,dir_mode=0777,file_mode=0777
 ```
 
-### **🔹 Azure File Sync**
+#### **🔹 Azure File Sync**
 - Sincronización entre servidores locales y Azure Files
 - **Cloud Tiering**: Archivos poco usados se mueven a la nube, manteniendo namespace local
 
@@ -443,9 +468,9 @@ New-AzStorageSyncServerEndpoint -ResourceGroupName "myRG" -StorageSyncServiceNam
 
 ---
 
-## **3. Azure Data Lake Storage Gen2**
+### **3. Azure Data Lake Storage Gen2**
 
-### **🔹 Características Principales**
+#### **🔹 Características Principales**
 - **Jerarquía de directorios** con sistema de archivos compatible con HDFS
 - **Control de acceso fino**:
   - RBAC (a nivel de cuenta/contenedor)
@@ -465,7 +490,7 @@ directory_client = service_client.get_directory_client("myfilesystem", "myfolder
 directory_client.set_access_control(permissions="rwxr-x---", owner="$superuser", group="$superuser")
 ```
 
-### **🔹 Patrones de Acceso**
+#### **🔹 Patrones de Acceso**
 | **Patrón** | **Ejemplo** |
 |------------|-------------|
 | **ABFS (Azure Blob File System)** | `abfss://<file_system>@<account_name>.dfs.core.windows.net/<path>` |
@@ -473,9 +498,9 @@ directory_client.set_access_control(permissions="rwxr-x---", owner="$superuser",
 
 ---
 
-## **4. Lifecycle Management para Blob Storage**
+### **4. Lifecycle Management para Blob Storage**
 
-### **🔹 Reglas de Ejemplo**
+#### **🔹 Reglas de Ejemplo**
 ```json
 {
   "rules": [
@@ -519,9 +544,9 @@ az storage account management-policy create \
 
 ---
 
-## **5. Change Feed de Cosmos DB**
+### **5. Change Feed de Cosmos DB**
 
-### **🔹 Implementación con Functions**
+#### **🔹 Implementación con Functions**
 ```csharp
 [FunctionName("CosmosChangeFeed")]
 public static void Run(
@@ -540,7 +565,7 @@ public static void Run(
 }
 ```
 
-### **🔹 Change Feed Processor**
+#### **🔹 Change Feed Processor**
 ```csharp
 var builder = new ChangeFeedProcessorBuilder()
     .WithProcessorName("myProcessor")
@@ -564,9 +589,9 @@ await builder.StartAsync();
 
 ---
 
-## **6. Discos Administrados (Managed Disks)**
+### **6. Discos Administrados (Managed Disks)**
 
-### **🔹 Tipos de Discos**
+#### **🔹 Tipos de Discos**
 | **Tipo** | **IOPS Máx** | **Throughput Máx** | **Latencia** | **Caso de Uso** |
 |----------|--------------|--------------------|--------------|------------------|
 | **Standard HDD** | 500 | 60 MB/s | Alta | Backup, archivo |
@@ -574,7 +599,7 @@ await builder.StartAsync();
 | **Premium SSD** | 20,000 | 900 MB/s | Baja | Bases de datos |
 | **Ultro SSD** | 160,000 | 2,000 MB/s | Muy baja | Cargas extremas |
 
-### **🔹 Snapshots**
+#### **🔹 Snapshots**
 **Creación via CLI:**
 ```bash
 az snapshot create \
@@ -591,14 +616,14 @@ az disk create \
   --source mySnapshot
 ```
 
-### **🔹 Mejores Prácticas**
+#### **🔹 Mejores Prácticas**
 - Usar **discos más pequeños** para mejor relación costo/rendimiento
 - **Acoplar discos** para mayor throughput (ej: 4 discos P10 vs 1 disco P40)
 - **Snapshots incrementales** para backups eficientes
 
 ---
 
-## **📌 Resumen Comparativo**
+### **📌 Resumen Comparativo**
 
 | **Servicio** | **Modelo de Datos** | **Fuerza Principal** | **Límite Clave** |
 |--------------|---------------------|----------------------|------------------|
@@ -631,11 +656,10 @@ var client = new SecretClient(
     new Uri("https://myvault.vault.azure.net/"),
     new DefaultAzureCredential());
 ```
-# Complemento para "Implement Azure Security" (AZ-204)
 
-## **1. Microsoft Identity Platform (MSAL)**
+### **1. Microsoft Identity Platform (MSAL)**
 
-### **🔹 Flujos de Autenticación con MSAL.js/MSAL.NET**
+#### **🔹 Flujos de Autenticación con MSAL.js/MSAL.NET**
 ```csharp
 // MSAL.NET (Client Credentials Flow)
 var app = ConfidentialClientApplicationBuilder
@@ -658,7 +682,7 @@ const msalInstance = new msal.PublicClientApplication(msalConfig);
 const loginResponse = await msalInstance.loginPopup({ scopes: ["User.Read"] });
 ```
 
-### **🔹 Delegated vs Application Permissions**
+#### **🔹 Delegated vs Application Permissions**
 | **Tipo** | **Requiere Usuario** | **Ejemplo** | **Consentimiento** |
 |----------|----------------------|-------------|--------------------|
 | **Delegated** | Sí | `Mail.Read` | Usuario o Admin |
@@ -674,9 +698,9 @@ var scopes = new[] {
 
 ---
 
-## **2. Role-Based Access Control (RBAC)**
+### **2. Role-Based Access Control (RBAC)**
 
-### **🔹 Roles Comunes en Azure**
+#### **🔹 Roles Comunes en Azure**
 | **Rol** | **Permisos** | **Uso Típico** |
 |---------|-------------|----------------|
 | **Owner** | Control total | Administradores |
@@ -702,7 +726,7 @@ az role assignment create \
 
 ---
 
-## **3. Azure Policy & Blueprints**
+### **3. Azure Policy & Blueprints**
 
 ### **🔹 Azure Policy**
 **Definición de política (ejemplo: exigir TLS 1.2 en Storage):**
@@ -737,7 +761,7 @@ az policy assignment create \
   --scope '/subscriptions/{sub-id}'
 ```
 
-### **🔹 Azure Blueprints**
+#### **🔹 Azure Blueprints**
 ```bash
 az blueprint create --name 'secure-storage' --management-group 'myMG'
 
@@ -750,9 +774,9 @@ az blueprint artifact create \
 
 ---
 
-## **4. Seguridad de Red**
+### **4. Seguridad de Red**
 
-### **🔹 Network Security Groups (NSG)**
+#### **🔹 Network Security Groups (NSG)**
 **Reglas de ejemplo (CLI):**
 ```bash
 az network nsg rule create \
@@ -769,7 +793,7 @@ az network nsg rule create \
   --destination-port-ranges 443
 ```
 
-### **🔹 Azure Firewall vs Application Gateway WAF**
+#### **🔹 Azure Firewall vs Application Gateway WAF**
 | **Característica** | **Azure Firewall** | **Application Gateway WAF** |
 |--------------------|-------------------|----------------------------|
 | **Capa** | Red (L3/L4) | Aplicación (L7) |
@@ -787,9 +811,9 @@ az network application-gateway waf-policy create \
 
 ---
 
-## **5. Azure App Configuration**
+### **5. Azure App Configuration**
 
-### **🔹 Almacenamiento Seguro de Configuraciones**
+#### **🔹 Almacenamiento Seguro de Configuraciones**
 **Ejemplo (C# con Key Vault Reference):**
 ```csharp
 public void ConfigureServices(IServiceCollection services)
@@ -807,14 +831,14 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
-### **🔹 Mejores Prácticas**
+#### **🔹 Mejores Prácticas**
 - **Rotación automática** para secrets referenciados
 - **Etiquetado** para control de versiones
 - **Replicación geográfica** para alta disponibilidad
 
 ---
 
-## **📌 Diagrama de Flujo de Seguridad Típico**
+### **📌 Diagrama de Flujo de Seguridad Típico**
 
 ```mermaid
 graph TD
@@ -825,7 +849,7 @@ graph TD
     E -->|Alertas| F[Azure Sentinel/SIEM]
 ```
 
-## **📌 Preguntas Frecuentes en el Examen**
+### **📌 Preguntas Frecuentes en el Examen**
 
 **1. ¿Cuándo usar Managed Identity vs Service Principal?**  
 - **Managed Identity**: Para recursos dentro de Azure (VM, Function, etc.).  
@@ -876,18 +900,17 @@ traces
 - Server response time
 - Exceptions
 
-# Complemento para "Monitor, Troubleshoot, and Optimize Azure Solutions" (AZ-204)
 
-## **1. Azure Monitor Alerts**
+### **1. Azure Monitor Alerts**
 
-### **🔹 Tipos de Alertas**
+#### **🔹 Tipos de Alertas**
 | **Tipo** | **Datos de Origen** | **Ejemplo de Uso** |
 |----------|---------------------|---------------------|
 | **Métricas** | Azure Monitor Metrics | CPU > 90% por 5 min |
 | **Registros** | Log Analytics queries | Errores > 100 en 1h |
 | **Activity Log** | Operaciones ARM | Eliminación de recursos |
 
-### **🔹 Creación de Alertas (CLI)**
+#### **🔹 Creación de Alertas (CLI)**
 **Alerta basada en métrica (CPU):**
 ```bash
 az monitor metrics alert create \
@@ -912,7 +935,7 @@ az monitor scheduled-query create \
   --action-groups "/subscriptions/{sub-id}/resourceGroups/myRG/providers/microsoft.insights/actionGroups/myActionGroup"
 ```
 
-### **🔹 Grupos de Acción (Action Groups)**
+#### **🔹 Grupos de Acción (Action Groups)**
 ```bash
 az monitor action-group create \
   --name "CriticalAlerts" \
@@ -923,9 +946,9 @@ az monitor action-group create \
 
 ---
 
-## **2. Diagnostic Settings**
+### **2. Diagnostic Settings**
 
-### **🔹 Configuración de Exportación**
+#### **🔹 Configuración de Exportación**
 **Destinos soportados:**
 - **Log Analytics Workspace**
 - **Azure Storage** (para archivado)
@@ -948,9 +971,9 @@ az monitor diagnostic-settings create \
 
 ---
 
-## **3. Autoscale Settings**
+### **3. Autoscale Settings**
 
-### **🔹 Configuración para VM Scale Sets**
+#### **🔹 Configuración para VM Scale Sets**
 ```bash
 az monitor autoscale create \
   --resource-group myRG \
@@ -967,7 +990,7 @@ az monitor autoscale rule create \
   --scale out 1
 ```
 
-### **🔹 Configuración para App Service**
+#### **🔹 Configuración para App Service**
 ```json
 {
   "profiles": [
@@ -1001,9 +1024,9 @@ az monitor autoscale rule create \
 
 ---
 
-## **4. Azure Service Health & Advisor**
+### **4. Azure Service Health & Advisor**
 
-### **🔹 Componentes Clave**
+##### **🔹 Componentes Clave**
 | **Servicio** | **Propósito** | **Ejemplo** |
 |--------------|--------------|-------------|
 | **Service Health** | Estado de servicios Azure | Interrupciones regionales |
@@ -1019,9 +1042,9 @@ AzureActivity
 
 ---
 
-## **5. Network Watcher**
+### **5. Network Watcher**
 
-### **🔹 Herramientas Clave**
+#### **🔹 Herramientas Clave**
 | **Herramienta** | **Uso** | **Ejemplo CLI** |
 |----------------|---------|----------------|
 | **NSG Flow Logs** | Auditoría de tráfico | `az network watcher flow-log configure` |
@@ -1049,7 +1072,7 @@ AzureNetworkAnalytics_CL
 
 ---
 
-## **📌 Resumen de Optimización**
+### **📌 Resumen **
 
 | **Área** | **Herramienta Principal** | **Métrica Clave** |
 |----------|--------------------------|-------------------|
@@ -1058,7 +1081,7 @@ AzureNetworkAnalytics_CL
 | **Costo** | Advisor | Cost recommendations |
 | **Seguridad** | NSG Flow Logs | Denied flows count |
 
-## **📌 Preguntas Frecuentes en el Examen**
+### **📌 Preguntas Frecuentes en el Examen**
 
 **1. ¿Cómo configurar alertas para múltiples recursos?**
 ```bash
@@ -1116,11 +1139,10 @@ await sender.SendMessageAsync(new ServiceBusMessage("content"));
 
 ---
 
-# Complemento para "Connect to and Consume Azure Services" (AZ-204)
 
-## **1. Azure Logic Apps**
+### **1. Azure Logic Apps**
 
-### **🔹 Diseño de Flujos Avanzados**
+#### **🔹 Diseño de Flujos Avanzados**
 **Estructura típica de un flujo:**
 ```json
 {
@@ -1172,9 +1194,9 @@ az logic workflow create \
 
 ---
 
-## **2. Conexiones Híbridas y On-Premises Data Gateway**
+### **2. Conexiones Híbridas y On-Premises Data Gateway**
 
-### **🔹 Hybrid Connections**
+#### **🔹 Hybrid Connections**
 **Configuración:**
 ```bash
 az relay namespace create \
@@ -1197,7 +1219,7 @@ var listener = new HybridConnectionListener(
 listener.OpenAsync().Wait();
 ```
 
-### **🔹 On-Premises Data Gateway**
+#### **🔹 On-Premises Data Gateway**
 **Flujo de instalación:**
 1. Descargar gateway desde Azure Portal
 2. Instalar en servidor local
@@ -1209,9 +1231,9 @@ listener.OpenAsync().Wait();
 
 ---
 
-## **3. Service Bus Relay y Event Hubs Capture**
+### **3. Service Bus Relay y Event Hubs Capture**
 
-### **🔹 Service Bus Relay**
+#### **🔹 Service Bus Relay**
 **Escenario típico:**
 ```
 [App Local] → [Service Bus Relay] → [Azure Service]
@@ -1230,7 +1252,7 @@ host.AddServiceEndpoint(
 host.Open();
 ```
 
-### **🔹 Event Hubs Capture**
+#### **🔹 Event Hubs Capture**
 **Configuración (CLI):**
 ```bash
 az eventhubs eventhub update \
@@ -1251,9 +1273,9 @@ az eventhubs eventhub update \
 
 ---
 
-## **4. Azure Functions Bindings**
+### **4. Azure Functions Bindings**
 
-### **🔹 Bindings Comunes**
+#### **🔹 Bindings Comunes**
 | **Binding** | **Dirección** | **Ejemplo** |
 |------------|--------------|-------------|
 | **Service Bus** | Input/Output | `[ServiceBusTrigger("myqueue")]` |
@@ -1277,9 +1299,9 @@ public static void Run(
 
 ---
 
-## **5. OpenAPI/Swagger en Functions y API Management**
+### **5. OpenAPI/Swagger en Functions y API Management**
 
-### **🔹 Generación Automática en Functions**
+#### **🔹 Generación Automática en Functions**
 **host.json:**
 ```json
 {
@@ -1306,7 +1328,7 @@ public static IActionResult Run(
     string id)
 ```
 
-### **🔹 Importación a API Management**
+#### **🔹 Importación a API Management**
 ```bash
 az apim api import \
   --resource-group myRG \
@@ -1318,9 +1340,9 @@ az apim api import \
 
 ---
 
-## **6. Consumo de Servicios Externos**
+### **6. Consumo de Servicios Externos**
 
-### **🔹 Polly para Resiliencia**
+#### **🔹 Polly para Resiliencia**
 **Ejemplo con HttpClient:**
 ```csharp
 var retryPolicy = Policy
@@ -1345,7 +1367,7 @@ var response = await Policy.WrapAsync(retryPolicy, circuitBreaker)
 
 ---
 
-## **📌 Diagrama de Integración Completa**
+### **📌 Diagrama de Integración Completa**
 
 ```mermaid
 graph LR
@@ -1357,7 +1379,7 @@ graph LR
     F -->|Polly Retry| C
 ```
 
-## **📌 Preguntas Frecuentes en el Examen**
+### **📌 Preguntas Frecuentes en el Examen**
 
 **1. ¿Cómo elegir entre Service Bus Relay y Hybrid Connections?**
 - **Relay**: Para exponer servicios WCF locales
@@ -1392,14 +1414,13 @@ az eventhubs namespace identity assign \
 }
 ``` 
 
-# **Desarrollo Profundizado para Almacenamiento en Azure (15-20%)**  
 
-## **1. Azure Blob Storage**  
+### **1. Azure Blob Storage**  
 
-### **🔹 Definición Clave**  
+#### **🔹 Definición Clave**  
 Servicio de almacenamiento de objetos para datos no estructurados (imágenes, videos, logs, backups).  
 
-### **🔹 Niveles de Acceso**  
+#### **🔹 Niveles de Acceso**  
 
 | **Nivel** | **Disponibilidad** | **Costo** | **Uso Típico** |
 |-----------|-------------------|-----------|----------------|
@@ -1411,7 +1432,7 @@ Servicio de almacenamiento de objetos para datos no estructurados (imágenes, vi
 - Tamaño máximo de blob: **5 TB** (blob en bloques).  
 - Tasa de solicitudes: **Hasta 20,000 RPM** por cuenta.  
 
-### **🔹 Ejemplo de Código (Subir un Blob en C#)**  
+#### **🔹 Ejemplo de Código (Subir un Blob en C#)**  
 ```csharp
 BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
 BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("mycontainer");
@@ -1423,7 +1444,7 @@ using (FileStream uploadFileStream = File.OpenRead("file.txt"))
 }
 ```
 
-### **🔹 Errores Comunes en el Examen AZ-204**  
+#### **🔹 Errores Comunes en el Examen AZ-204**  
 ❌ **No configurar el nivel de acceso correcto** (usar Hot para datos raramente accedidos aumenta costos).  
 ✅ **Solución**: Usar **Cool** o **Archive** según frecuencia de acceso.  
 
@@ -1432,12 +1453,12 @@ using (FileStream uploadFileStream = File.OpenRead("file.txt"))
 
 ---
 
-## **2. Azure Cosmos DB**  
+### **2. Azure Cosmos DB**  
 
-### **🔹 Definición Clave**  
+#### **🔹 Definición Clave**  
 Base de datos NoSQL multi-modelo con baja latencia y escalado horizontal automático.  
 
-### **🔹 APIs Disponibles**  
+####**🔹 APIs Disponibles**  
 
 | **API** | **Modelo de Datos** | **Uso Típico** |
 |---------|---------------------|----------------|
@@ -1446,7 +1467,7 @@ Base de datos NoSQL multi-modelo con baja latencia y escalado horizontal automá
 | **Cassandra** | Column-family | Datos series de tiempo |
 | **Table** | Clave-valor | Datos simples, migración desde Azure Table Storage |
 
-### **🔹 Niveles de Consistencia**  
+#### **🔹 Niveles de Consistencia**  
 
 | **Nivel** | **Rendimiento** | **Caso de Uso** |
 |-----------|----------------|------------------|
@@ -1460,7 +1481,7 @@ Base de datos NoSQL multi-modelo con baja latencia y escalado horizontal automá
 - Tamaño máximo de documento: **2 MB** (API SQL).  
 - Throughput mínimo: **400 RU/s** por contenedor.  
 
-### **🔹 Ejemplo de Consulta (SQL API)**  
+#### **🔹 Ejemplo de Consulta (SQL API)**  
 ```sql
 SELECT * FROM c 
 WHERE c.category = "Electronics" 
@@ -1468,7 +1489,7 @@ ORDER BY c.price DESC
 OFFSET 0 LIMIT 10
 ```
 
-### **🔹 Pregunta Frecuente en el Examen AZ-204**  
+#### **🔹 Pregunta Frecuente en el Examen AZ-204**  
 **❓ ¿Cuándo usar Cosmos DB vs Azure SQL Database?**  
 
 ✅ **Respuesta:**  
@@ -1483,12 +1504,12 @@ OFFSET 0 LIMIT 10
 
 ---
 
-## **3. Azure Table Storage**  
+### **3. Azure Table Storage**  
 
-### **🔹 Definición Clave**  
+#### **🔹 Definición Clave**  
 Almacenamiento clave-valor NoSQL para datos semi-estructurados.  
 
-### **🔹 Comparación con Cosmos DB (Table API)**  
+#### **🔹 Comparación con Cosmos DB (Table API)**  
 
 | **Característica** | **Azure Table Storage** | **Cosmos DB (Table API)** |
 |--------------------|------------------------|---------------------------|
@@ -1497,7 +1518,7 @@ Almacenamiento clave-valor NoSQL para datos semi-estructurados.
 | **Distribución Global** | No | Sí |
 | **Costo** | Muy económico | Más caro |
 
-### **🔹 Ejemplo de Código (Insertar entidad en C#)**  
+#### **🔹 Ejemplo de Código (Insertar entidad en C#)**  
 ```csharp
 TableServiceClient tableServiceClient = new TableServiceClient(connectionString);
 TableClient tableClient = tableServiceClient.GetTableClient("orders");
@@ -1511,7 +1532,7 @@ var order = new TableEntity("partitionKey", "rowKey")
 await tableClient.AddEntityAsync(order);
 ```
 
-### **🔹 Errores Comunes en el Examen AZ-204**  
+#### **🔹 Errores Comunes en el Examen AZ-204**  
 ❌ **No elegir correctamente PartitionKey** (puede causar "hot partitions").  
 ✅ **Solución**: Usar un valor distribuido (ej: `UserId` en lugar de `Country`).  
 
@@ -1520,9 +1541,9 @@ await tableClient.AddEntityAsync(order);
 
 ---
 
-## **4. Azure SQL Database**  
+### **4. Azure SQL Database**  
 
-### **🔹 Modelos de Implementación**  
+#### **🔹 Modelos de Implementación**  
 
 | **Modelo** | **Descripción** | **Uso Típico** |
 |------------|----------------|----------------|
@@ -1530,7 +1551,7 @@ await tableClient.AddEntityAsync(order);
 | **Elastic Pool** | Múltiples DBs compartiendo recursos | Multi-tenant apps |
 | **Managed Instance** | Compatible con SQL Server On-prem | Migración lift-and-shift |
 
-### **🔹 Ejemplo de Consulta (JOIN en T-SQL)**  
+#### **🔹 Ejemplo de Consulta (JOIN en T-SQL)**  
 ```sql
 SELECT u.UserName, o.OrderDate 
 FROM Users u
@@ -1538,7 +1559,7 @@ JOIN Orders o ON u.UserId = o.UserId
 WHERE o.Total > 1000
 ```
 
-### **🔹 Pregunta Frecuente en el Examen AZ-204**  
+#### **🔹 Pregunta Frecuente en el Examen AZ-204**  
 **❓ ¿Cómo optimizar el rendimiento en Azure SQL Database?**  
 
 ✅ **Respuesta:**  
@@ -1547,14 +1568,14 @@ WHERE o.Total > 1000
 3. Usar **Elastic Pool** si tienes múltiples DBs con uso variable.  
 
 ---
-# **Implementación Profundizada de Seguridad en Azure (15-20%)**
+## 6 **Implementación Profundizada de Seguridad en Azure (15-20%)**
 
-## **1. Azure Active Directory (Azure AD)**
+### **1. Azure Active Directory (Azure AD)**
 
-### **🔹 Definición Clave**
+#### **🔹 Definición Clave**
 Servicio de identidad y acceso en la nube (IDaaS) que permite autenticación y autorización centralizada.
 
-### **🔹 Flujos de Autenticación Comunes**
+#### **🔹 Flujos de Autenticación Comunes**
 
 | **Flujo** | **Uso Típico** | **Diagrama** |
 |-----------|----------------|-------------|
@@ -1579,9 +1600,9 @@ var result = await app.AcquireTokenForClient(scopes).ExecuteAsync();
 
 ---
 
-## **2. Managed Identities**
+### **2. Managed Identities**
 
-### **🔹 Tipos**
+#### **🔹 Tipos**
 | **Tipo** | **Ciclo de Vida** | **Uso** |
 |----------|------------------|---------|
 | Sistema | Vinculado al recurso | Único recurso |
@@ -1594,15 +1615,15 @@ var blobServiceClient = new BlobServiceClient(
     new DefaultAzureCredential()); // Auto-detecta Managed Identity
 ```
 
-### **🔹 Límites Clave**
+#### **🔹 Límites Clave**
 - 1,000 MI por suscripción (asignadas por usuario)
 - No compatible con todos los servicios (ver documentación)
 
 ---
 
-## **3. Azure Key Vault**
+### **3. Azure Key Vault**
 
-### **🔹 Secretos vs Claves vs Certificados**
+#### **🔹 Secretos vs Claves vs Certificados**
 | **Tipo** | **Ejemplo** | **Rotación** |
 |----------|------------|-------------|
 | Secretos | Connection strings | Manual/Auto (preview) |
@@ -1619,15 +1640,15 @@ client = SecretClient(vault_url="https://myvault.vault.azure.net", credential=cr
 secret = client.get_secret("database-password")
 ```
 
-### **🔹 Mejores Prácticas**
+#### **🔹 Mejores Prácticas**
 - **Acceso mínimo**: Usar políticas RBAC en Key Vault.
 - **Backup**: Siempre exportar certificados/claves.
 
 ---
 
-## **4. SAS (Shared Access Signatures)**
+### **4. SAS (Shared Access Signatures)**
 
-### **🔹 Tipos de SAS**
+#### **🔹 Tipos de SAS**
 | **Tipo** | **Alcance** | **Ejemplo** |
 |----------|------------|------------|
 | Servicio | Blob/Queue/Table | `https://mystorage.blob.core.windows.net/container?sv=2020-08-04&ss=b&srt=s&...` |
@@ -1647,13 +1668,13 @@ sasBuilder.SetPermissions(BlobSasPermissions.Read);
 var sasToken = sasBuilder.ToSasQueryParameters(new StorageSharedKeyCredential(accountName, accountKey)).ToString();
 ```
 
-### **🔹 Límites Críticos**
+#### **🔹 Límites Críticos**
 - **Tiempo máximo**: 7 días para SAS delegado con Azure AD
 - **Revocación**: Solo posible con políticas de acceso almacenadas
 
 ---
 
-## **📌 Preguntas Frecuentes en el Examen AZ-204**
+### **📌 Preguntas Frecuentes en el Examen AZ-204**
 
 **1. ¿Cuándo usar Managed Identities vs Service Principals?**
 - **Managed Identity**: Cuando el recurso está en Azure (VM, Function, etc.).
@@ -1692,11 +1713,11 @@ public static async Task<IActionResult> Run(
 
 ---
 
-# **Monitorización y Solución de Problemas en Azure (10-15%)**
+## **Monitorización y Solución de Problemas en Azure (10-15%)**
 
-## **1. Azure Monitor**
+### **1. Azure Monitor**
 
-### **🔹 Componentes Clave**
+#### **🔹 Componentes Clave**
 | **Servicio** | **Propósito** | **Ejemplo de Uso** |
 |--------------|--------------|---------------------|
 | **Metrics** | Datos numéricos de rendimiento | CPU usage, request count |
@@ -1712,15 +1733,15 @@ AzureMetrics
 | summarize avg(Average) by bin(TimeGenerated, 5m)
 ```
 
-## **2. Application Insights**
+### **2. Application Insights**
 
-### **🔹 Instrumentación Automática**
+#### **🔹 Instrumentación Automática**
 ```csharp
 // En Startup.cs (ASP.NET Core)
 services.AddApplicationInsightsTelemetry(Configuration["APPINSIGHTS_CONNECTIONSTRING"]);
 ```
 
-### **🔹 Consultas KQL Comunes**
+#### **🔹 Consultas KQL Comunes**
 **1. Errores por tipo:**
 ```kusto
 exceptions
@@ -1742,9 +1763,9 @@ traces
 | project timestamp, message, severityLevel
 ```
 
-## **3. Log Analytics**
+### **3. Log Analytics**
 
-### **🔹 Tablas Importantes**
+#### **🔹 Tablas Importantes**
 | **Tabla** | **Contenido** |
 |-----------|--------------|
 | AppTraces | Trazas de Application Insights |
@@ -1752,7 +1773,7 @@ traces
 | Perf | Datos de rendimiento |
 | SecurityEvent | Eventos de seguridad |
 
-### **🔹 Ejemplo Avanzado (Detección de Anomalías)**
+#### **🔹 Ejemplo Avanzado (Detección de Anomalías)**
 ```kusto
 let baseline = requests
 | where timestamp > ago(1d)
@@ -1765,9 +1786,9 @@ requests
 | project timestamp, actual, expected=avg_duration
 ```
 
-## **4. Diagnóstico de Problemas Comunes**
+### **4. Diagnóstico de Problemas Comunes**
 
-### **🔹 Escenarios y Soluciones**
+#### **🔹 Escenarios y Soluciones**
 | **Síntoma** | **Herramienta de Diagnóstico** | **Posible Solución** |
 |-------------|-------------------------------|----------------------|
 | Alta CPU en Web App | Metrics → CPU Percentage | Escalar verticalmente |
@@ -1775,9 +1796,9 @@ requests
 | Latencia en Functions | App Insights → Performance | Optimizar dependencias |
 | Pérdida de logs | Diagnostic Settings | Habilitar exportación a Storage |
 
-## **5. Configuración de Alertas**
+### **5. Configuración de Alertas**
 
-### **🔹 Tipos de Reglas**
+#### **🔹 Tipos de Reglas**
 ```powershell
 # Crear alerta de métrica via CLI
 az monitor metrics alert create \
@@ -1788,12 +1809,12 @@ az monitor metrics alert create \
     --action email admin@contoso.com
 ```
 
-### **🔹 Buenas Prácticas**
+#### **🔹 Buenas Prácticas**
 - Usar **grupos de acciones** para notificaciones
 - Configurar **umbrales dinámicos** para cargas variables
 - Enlazar alertas a **runbooks de Automation**
 
-## **📌 Preguntas Frecuentes en el Examen**
+### **📌 Preguntas Frecuentes en el Examen**
 
 **1. ¿Cómo diferenciar entre errores 500 causados por el servidor vs dependencias?**
 ```kusto
@@ -1823,11 +1844,11 @@ performanceCounters
 | summarize avg(value) by cloud_RoleInstance, bin(TimeGenerated, 1h)
 | render timechart
 ```
-# **Conexión y Consumo de Servicios de Azure (20-25%)**
+## **Conexión y Consumo de Servicios de Azure (20-25%)**
 
-## **1. Azure Event Grid**
+### **1. Azure Event Grid**
 
-### **🔹 Conceptos Clave**
+#### **🔹 Conceptos Clave**
 - **Servicio de enrutamiento de eventos totalmente administrado**
 - Modelo publicador-suscriptor
 - Soporta **eventos discretos** (no streaming)
@@ -1837,7 +1858,7 @@ performanceCounters
 Publicador (Ej: Blob Storage) → Tópico de Event Grid → Suscriptores (Functions, Logic Apps)
 ```
 
-### **🔹 Esquema de Evento Típico**
+#### **🔹 Esquema de Evento Típico**
 ```json
 {
   "id": "string",
@@ -1851,16 +1872,16 @@ Publicador (Ej: Blob Storage) → Tópico de Event Grid → Suscriptores (Functi
 }
 ```
 
-### **🔹 Límites Importantes**
+#### **🔹 Límites Importantes**
 | Límite | Valor |
 |--------|-------|
 | Tamaño máximo de evento | 1 MB |
 | Tasa de publicación máxima | 5,000 eventos/seg/tópico |
 | Retención de eventos | 24 horas |
 
-## **2. Azure Event Hubs**
+### **2. Azure Event Hubs**
 
-### **🔹 Comparación con Event Grid**
+#### **🔹 Comparación con Event Grid**
 | Característica | Event Grid | Event Hubs |
 |---------------|-----------|-----------|
 | Patrón | Eventos discretos | Streaming de eventos |
@@ -1868,7 +1889,7 @@ Publicador (Ej: Blob Storage) → Tópico de Event Grid → Suscriptores (Functi
 | Throughput | 5,000 ev/seg | 1 MB/seg/unidad |
 | Consumo | Múltiples suscriptores | Consumidores competitivos |
 
-### **🔹 Ejemplo de Código (Producer en C#)**
+#### **🔹 Ejemplo de Código (Producer en C#)**
 ```csharp
 var producer = new EventHubProducerClient(
     "Endpoint=sb://myeventhub.servicebus.windows.net/;...",
@@ -1878,16 +1899,16 @@ var eventData = new EventData(Encoding.UTF8.GetBytes("Mensaje de prueba"));
 await producer.SendAsync(new[] { eventData });
 ```
 
-## **3. Azure Service Bus**
+### **3. Azure Service Bus**
 
-### **🔹 Tipos de Entidades**
+#### **🔹 Tipos de Entidades**
 | Entidad | Patrón | Característica Clave |
 |---------|--------|----------------------|
 | Colas | Punto a punto | Orden FIFO (opcional) |
 | Tópicos | Publicar/Suscribir | Múltiples suscripciones |
 | Retransmisiones | Conexión híbrida | Conexiones bidireccionales |
 
-### **🔹 Ejemplo Avanzado (Mensajes Diferidos)**
+#### **🔹 Ejemplo Avanzado (Mensajes Diferidos)**
 ```csharp
 var sender = new ServiceBusClient(connectionString).CreateSender("myqueue");
 var message = new ServiceBusMessage("Mensaje importante")
@@ -1897,9 +1918,9 @@ var message = new ServiceBusMessage("Mensaje importante")
 await sender.SendMessageAsync(message);
 ```
 
-## **4. API Management**
+### **4. API Management**
 
-### **🔹 Componentes Principales**
+#### **🔹 Componentes Principales**
 - **Gateways**: Puntos de entrada de API
 - **Productos**: Paquetes de APIs
 - **Políticas**: Reglas de transformación/seguridad
@@ -1910,16 +1931,16 @@ await sender.SendMessageAsync(message);
 <quota calls="10000" renewal-period="43200" />
 ```
 
-## **5. Patrones de Integración**
+### **5. Patrones de Integración**
 
-### **🔹 Arquitectura Orientada a Eventos**
+#### **🔹 Arquitectura Orientada a Eventos**
 ```
 [Frontend] → [Event Grid] → [Functions] → [Cosmos DB]
                    ↓
               [Event Hubs] → [Stream Analytics] → [Power BI]
 ```
 
-### **🔹 Ejemplo de Código (Consumer de Event Hubs)**
+#### **🔹 Ejemplo de Código (Consumer de Event Hubs)**
 ```csharp
 var processor = new EventProcessorClient(
     storageClient,
@@ -1933,7 +1954,7 @@ processor.ProcessEventAsync += eventArgs => {
 };
 ```
 
-## **📌 Preguntas Frecuentes en el Examen**
+### **📌 Preguntas Frecuentes en el Examen**
 
 **1. ¿Cómo elegir entre Event Grid y Service Bus?**
 - Usar **Event Grid** para reaccionar a eventos de servicios Azure
