@@ -396,7 +396,7 @@ using FileStream uploadFileStream = File.OpenRead("file.txt");
 await blobClient.UploadAsync(uploadFileStream);
 ```
 
-### ** Azure Queue Storage**
+### **Azure Queue Storage**
 
 #### **🔹 Conceptos Clave**
 - Servicio de mensajería simple para patrones producer-consumer
