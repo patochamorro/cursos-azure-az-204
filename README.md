@@ -1,4 +1,4 @@
-[TOC]
+
 # Resumen para el Examen AZ-204: Desarrollo de Soluciones en Azure
 
 ## 1. Develop Azure compute solutions (25–30%)
